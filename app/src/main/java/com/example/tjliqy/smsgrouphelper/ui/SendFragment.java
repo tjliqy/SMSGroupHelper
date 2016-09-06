@@ -1,7 +1,7 @@
-package com.example.tjliqy.smsgrouphelper;
+package com.example.tjliqy.smsgrouphelper.ui;
 
-import android.Manifest;
 import android.app.Activity;
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -9,21 +9,25 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v4.app.ActivityCompat;
+import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.LayoutInflater;
 import android.view.View;
-import android.webkit.WebView;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.tjliqy.smsgrouphelper.Api.ApiClient;
-import com.example.tjliqy.smsgrouphelper.bean.Bean;
-import com.example.tjliqy.smsgrouphelper.bean.EBean;
+import com.example.tjliqy.smsgrouphelper.R;
+import com.example.tjliqy.smsgrouphelper.bean.Address;
+import com.example.tjliqy.smsgrouphelper.module.HttpOnNextListener;
+import com.example.tjliqy.smsgrouphelper.module.ProgressSubscriber;
+import com.example.tjliqy.smsgrouphelper.module.SubjectPost;
+import com.example.tjliqy.smsgrouphelper.module.api.ApiClient;
 import com.example.tjliqy.smsgrouphelper.sms.SmsHelper;
 
 import java.util.ArrayList;
@@ -31,88 +35,74 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import rx.Observable;
-import rx.Subscriber;
 
-public class MainActivity extends AppCompatActivity {
+/**
+ * Created by tjliqy on 2016/9/6.
+ */
+public class SendFragment extends Fragment {
 
-    @BindView(R.id.rl_add)
-    RecyclerView rlAdd;
-    @BindView(R.id.bt_send)
-    Button btSend;
-    @BindView(R.id.bt_get)
-    Button btGet;
+
     @BindView(R.id.tv_all)
     TextView tvAll;
     @BindView(R.id.et_f)
     EditText etF;
     @BindView(R.id.et_t)
     EditText etT;
+    @BindView(R.id.rl_add)
+    RecyclerView rlAdd;
+    @BindView(R.id.bt_get)
+    Button btGet;
+    @BindView(R.id.bt_send)
+    Button btSend;
 
-    private RvAdapter adapter;
-
-    private List<Bean.DataBean> beanList;
 
     private SmsHelper helper;
 
     private ApiClient apiClient;
 
+    private SubjectPost postEntity;
+
+    private RvAdapter adapter;
+
+    private List<Address> beanList;
+
+    int num = 0;
+
+    int endNum;
+
     String SENT_SMS_ACTION = "SENT_SMS_ACTION";
     String DELIVERED_SMS_ACTION = "DELIVERED_SMS_ACTION";
 
-    int num = 0;
-    int endNum;
+    @Nullable
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        ButterKnife.bind(this);
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_send, container, false);
+        ButterKnife.bind(this,view);
 
-        adapter = new RvAdapter(this);
+
+        adapter = new RvAdapter(getActivity());
         beanList = new ArrayList<>();
 
-        ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.SEND_SMS},1);
-
-
-//        init();
-        rlAdd.setLayoutManager(new LinearLayoutManager(this));
+        rlAdd.setLayoutManager(new LinearLayoutManager(getActivity()));
+        postEntity = new SubjectPost(new ProgressSubscriber(getAddOnNextListener,getActivity()),this.getString(R.string.token));
         apiClient = ApiClient.getInstance();
 
         btGet.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
-                apiClient.getExMsg(new Subscriber<Bean>() {
-                    @Override
-                    public void onCompleted() {
-
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {
-
-                    }
-
-                    @Override
-                    public void onNext(Bean bean) {
-                        beanList.clear();
-                        beanList.addAll(bean.getData());
-                        adapter.add(beanList);
-                        tvAll.setText("总数："+ beanList.size());
-                        endNum = beanList.size();
-                    }
-                });
+                apiClient.getExMsg(postEntity);
             }
         });
 
         rlAdd.setAdapter(adapter);
-//        adapter.add(beanList);
-        helper = new SmsHelper(this);
+        helper = new SmsHelper(getActivity());
+
+
 
         btSend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
                 builder.setMessage("是否开始批量发送？");
                 builder.setPositiveButton("确认", new DialogInterface.OnClickListener() {
                     @Override
@@ -138,24 +128,31 @@ public class MainActivity extends AppCompatActivity {
                 builder.create().show();
             }
         });
+        getActivity().registerReceiver(sendMessage, new IntentFilter(SENT_SMS_ACTION));
+
+        return view;
     }
 
-    private void init(){
-        for (int i = 0; i < 200; i++) {
-            Bean.DataBean addBean = new Bean.DataBean();
-            addBean.setRealname("冀辰阳"+i);
-            addBean.setPhone("13302083639");
-            addBean.setDetail("ceshi");
-            addBean.setSend(false);
-            beanList.add(addBean);
+
+    HttpOnNextListener getAddOnNextListener = new HttpOnNextListener<List<Address>>() {
+        @Override
+        public void onNext(List<Address> addressList) {
+            beanList.clear();
+            beanList.addAll(addressList);
+            adapter.add(beanList);
+            tvAll.setText("总数："+ beanList.size());
+            endNum = beanList.size();
         }
+    };
+
+
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
     }
 
-    public void send() {
-
-    }
-
-    class SendTask extends AsyncTask<Void, Integer, Boolean>{
+    class SendTask extends AsyncTask<Void, Integer, Boolean> {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
@@ -186,15 +183,9 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(Boolean aBoolean) {
             if (!aBoolean){
-                Toast.makeText(MainActivity.this, "全部发送完成!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getActivity(), "全部发送完成!", Toast.LENGTH_SHORT).show();
             }
         }
-    }
-
-    protected void onResume() {
-        super.onResume();
-        //注册监听
-        registerReceiver(sendMessage, new IntentFilter(SENT_SMS_ACTION));
     }
 
     BroadcastReceiver sendMessage = new BroadcastReceiver() {
@@ -203,37 +194,17 @@ public class MainActivity extends AppCompatActivity {
             // 判断短信是否成功
             switch (getResultCode()) {
                 case Activity.RESULT_OK:
-                    Toast.makeText(MainActivity.this, num + "发送成功！", Toast.LENGTH_SHORT)
+                    Toast.makeText(getActivity(), num + "发送成功！", Toast.LENGTH_SHORT)
                             .show();
                     beanList.get(num).setSend(true);
                     adapter.changeStatus(num);
-                    apiClient.send(new Subscriber<EBean>() {
-                        @Override
-                        public void onCompleted() {
-
-                        }
-
-                        @Override
-                        public void onError(Throwable e) {
-
-                        }
-
-                        @Override
-                        public void onNext(EBean eBean) {
-                            if ("0".equals(eBean.getErrno())){
-                                new SendTask().execute();
-                            }else {
-                                Toast.makeText(MainActivity.this,num+"上传发送记录失败",Toast.LENGTH_SHORT).show();
-                            }
-                        }
-                    },num);
-//                    new SendTask().execute();
+                    new SendTask().execute();
                     break;
                 default:
-                    Toast.makeText(MainActivity.this, "发送失败！", Toast.LENGTH_SHORT)
+                    Toast.makeText(getActivity(), "发送失败！", Toast.LENGTH_SHORT)
                             .show();
 
-                    AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                    AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
                     builder.setMessage("在发送给" + beanList.get(num).getRealname() + "时出错，发送中断");
                     builder.setPositiveButton("确认", new DialogInterface.OnClickListener() {
                         @Override

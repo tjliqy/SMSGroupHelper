@@ -1,16 +1,11 @@
 package com.example.tjliqy.smsgrouphelper.sms;
 
-import android.app.Activity;
 import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.telephony.SmsManager;
 import android.util.Log;
 import android.widget.Toast;
-
-import com.example.tjliqy.smsgrouphelper.MainActivity;
 
 import java.util.ArrayList;
 

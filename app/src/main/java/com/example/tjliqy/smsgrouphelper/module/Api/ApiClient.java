@@ -1,8 +1,11 @@
-package com.example.tjliqy.smsgrouphelper.Api;
+package com.example.tjliqy.smsgrouphelper.module.api;
 
+import com.example.tjliqy.smsgrouphelper.bean.Address;
 import com.example.tjliqy.smsgrouphelper.bean.Bean;
 import com.example.tjliqy.smsgrouphelper.bean.EBean;
+import com.example.tjliqy.smsgrouphelper.module.BaseEnity;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.OkHttpClient;
@@ -46,12 +49,14 @@ public class ApiClient {
         }
         return INSTANCE;
     }
-    public void getExMsg(Subscriber<Bean> subscriber){
-        Observable<Bean> observable = api.getMsg("pEu7AWDahyPZkWXCSQe2Bkua9MxE6Ev5PZsnybxRba-gowIR34rrZQZiyO0R1VqRh3MEt1AdXddctlr-AGUs7w");
-        observable.subscribeOn(Schedulers.io())//指定事件产生线程io 用于读写文件、读写数据库、网络信息交互
+    public void getExMsg(BaseEnity basebar){
+        Observable observable = basebar.getObservable(api)
+                .subscribeOn(Schedulers.io())
                 .unsubscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(subscriber);
+                .map(basebar);
+
+        observable.subscribe(basebar.getSubscrber());
     }
 
     public void send(Subscriber<EBean> subscriber, int id){

@@ -1,4 +1,4 @@
-package com.example.tjliqy.smsgrouphelper;
+package com.example.tjliqy.smsgrouphelper.ui;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
@@ -7,6 +7,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.example.tjliqy.smsgrouphelper.R;
+import com.example.tjliqy.smsgrouphelper.bean.Address;
 import com.example.tjliqy.smsgrouphelper.bean.Bean;
 
 import java.util.ArrayList;
@@ -22,7 +24,7 @@ public class RvAdapter extends RecyclerView.Adapter<RvAdapter.RvViewHolder>{
 
     private Context context;
 
-    private List<Bean.DataBean> beanList = new ArrayList<>();
+    private List<Address> beanList = new ArrayList<>();
 
     public RvAdapter(Context context) {
         this.context = context;
@@ -33,7 +35,7 @@ public class RvAdapter extends RecyclerView.Adapter<RvAdapter.RvViewHolder>{
         notifyItemChanged(position);
     }
 
-    public void add(List<Bean.DataBean> beanList){
+    public void add(List<Address> beanList){
         this.beanList.addAll(beanList);
         notifyDataSetChanged();
     }
