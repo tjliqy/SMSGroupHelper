@@ -28,6 +28,7 @@ public class MainActivity extends AppCompatActivity{
 
     private SendFragment sendFragment;
 
+    private GotFragment getFragment;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,9 +42,9 @@ public class MainActivity extends AppCompatActivity{
 
         ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.SEND_SMS},1);
 
-        SecondaryDrawerItem item1 = new SecondaryDrawerItem().withIdentifier(1).withName("发送");
+        SecondaryDrawerItem item1 = new SecondaryDrawerItem().withIdentifier(1).withName("发送").withSelectable(true);
 
-        SecondaryDrawerItem item2= new SecondaryDrawerItem().withIdentifier(2).withName("接收");
+        SecondaryDrawerItem item2= new SecondaryDrawerItem().withIdentifier(2).withName("接收").withSelectable(true);
 
         Drawer result = new DrawerBuilder()
                 .withActivity(this)
@@ -60,6 +61,16 @@ public class MainActivity extends AppCompatActivity{
                         return false;
                     }
                 })
+                .withOnDrawerItemClickListener(new Drawer.OnDrawerItemClickListener() {
+                    @Override
+                    public boolean onItemClick(View view, int position, IDrawerItem drawerItem) {
+                        if (drawerItem != null){
+                            replaceFragment((int) drawerItem.getIdentifier());
+                        }
+                        return false;
+                    }
+                })
+                .withSavedInstance(savedInstanceState)
                 .build();
     }
 
@@ -72,6 +83,12 @@ public class MainActivity extends AppCompatActivity{
                     sendFragment = new SendFragment();
                 }
                 fragment = sendFragment;
+                break;
+            case 2:
+                if(getFragment == null){
+                    getFragment = new GotFragment();
+                }
+                fragment = getFragment;
                 break;
         }
         fragmentManager.beginTransaction()

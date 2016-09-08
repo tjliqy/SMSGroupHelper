@@ -9,7 +9,6 @@ import android.widget.TextView;
 
 import com.example.tjliqy.smsgrouphelper.R;
 import com.example.tjliqy.smsgrouphelper.bean.Address;
-import com.example.tjliqy.smsgrouphelper.bean.Bean;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,13 +19,13 @@ import butterknife.ButterKnife;
 /**
  * Created by tjliqy on 2016/9/2.
  */
-public class RvAdapter extends RecyclerView.Adapter<RvAdapter.RvViewHolder>{
+public class RvSendAdapter extends RecyclerView.Adapter<RvSendAdapter.RvViewHolder>{
 
     private Context context;
 
     private List<Address> beanList = new ArrayList<>();
 
-    public RvAdapter(Context context) {
+    public RvSendAdapter(Context context) {
         this.context = context;
     }
 

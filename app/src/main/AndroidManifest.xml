@@ -3,6 +3,7 @@
     package="com.example.tjliqy.smsgrouphelper">
 
     <application
+        android:name=".SMSGroupHelperApp"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="招募短信助手"

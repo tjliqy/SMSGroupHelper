@@ -29,6 +29,7 @@ import com.example.tjliqy.smsgrouphelper.module.ProgressSubscriber;
 import com.example.tjliqy.smsgrouphelper.module.SubjectPost;
 import com.example.tjliqy.smsgrouphelper.module.api.ApiClient;
 import com.example.tjliqy.smsgrouphelper.sms.SmsHelper;
+import com.example.tjliqy.smsgrouphelper.support.PreferenceHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -62,7 +63,7 @@ public class SendFragment extends Fragment {
 
     private SubjectPost postEntity;
 
-    private RvAdapter adapter;
+    private RvSendAdapter adapter;
 
     private List<Address> beanList;
 
@@ -80,9 +81,8 @@ public class SendFragment extends Fragment {
         ButterKnife.bind(this,view);
 
 
-        adapter = new RvAdapter(getActivity());
+        adapter = new RvSendAdapter(getActivity());
         beanList = new ArrayList<>();
-
         rlAdd.setLayoutManager(new LinearLayoutManager(getActivity()));
         postEntity = new SubjectPost(new ProgressSubscriber(getAddOnNextListener,getActivity()),this.getString(R.string.token));
         apiClient = ApiClient.getInstance();
@@ -133,6 +133,11 @@ public class SendFragment extends Fragment {
         return view;
     }
 
+    @Override
+    public void onDestroyView() {
+        getActivity().unregisterReceiver(sendMessage);
+        super.onDestroyView();
+    }
 
     HttpOnNextListener getAddOnNextListener = new HttpOnNextListener<List<Address>>() {
         @Override
@@ -142,15 +147,39 @@ public class SendFragment extends Fragment {
             adapter.add(beanList);
             tvAll.setText("总数："+ beanList.size());
             endNum = beanList.size();
+            PreferenceHelper.setPrefAddList(beanList);
         }
     };
 
+    BroadcastReceiver sendMessage = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context c, Intent intent) {
+            // 判断短信是否成功
+            switch (getResultCode()) {
+                case Activity.RESULT_OK:
+                    Toast.makeText(getActivity(), num + "发送成功！", Toast.LENGTH_SHORT)
+                            .show();
+                    beanList.get(num).setSend(true);
+                    adapter.changeStatus(num);
+                    new SendTask().execute();
+                    break;
+                default:
+                    Toast.makeText(getActivity(), "发送失败！", Toast.LENGTH_SHORT)
+                            .show();
 
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-    }
+                    AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                    builder.setMessage("在发送给" + beanList.get(num).getRealname() + "时出错，发送中断");
+                    builder.setPositiveButton("确认", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    });
+                    builder.create().show();
+                    break;
+            }
+        }
+    };
 
     class SendTask extends AsyncTask<Void, Integer, Boolean> {
         @Override
@@ -187,34 +216,4 @@ public class SendFragment extends Fragment {
             }
         }
     }
-
-    BroadcastReceiver sendMessage = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context c, Intent intent) {
-            // 判断短信是否成功
-            switch (getResultCode()) {
-                case Activity.RESULT_OK:
-                    Toast.makeText(getActivity(), num + "发送成功！", Toast.LENGTH_SHORT)
-                            .show();
-                    beanList.get(num).setSend(true);
-                    adapter.changeStatus(num);
-                    new SendTask().execute();
-                    break;
-                default:
-                    Toast.makeText(getActivity(), "发送失败！", Toast.LENGTH_SHORT)
-                            .show();
-
-                    AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-                    builder.setMessage("在发送给" + beanList.get(num).getRealname() + "时出错，发送中断");
-                    builder.setPositiveButton("确认", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.dismiss();
-                        }
-                    });
-                    builder.create().show();
-                    break;
-            }
-        }
-    };
 }
