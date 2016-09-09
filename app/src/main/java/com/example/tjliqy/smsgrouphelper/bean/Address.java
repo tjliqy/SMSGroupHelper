@@ -18,7 +18,8 @@ public class Address {
     private String detail;
     private String realname;
     private String phone;
-    private boolean isSend;
+    private String response;
+    private int status = 0;
 
     public String getId() {
         return id;
@@ -60,12 +61,20 @@ public class Address {
         this.phone = phone;
     }
 
-    public boolean isSend() {
-        return isSend;
+    public String getResponse() {
+        return response;
     }
 
-    public void setSend(boolean send) {
-        isSend = send;
+    public void setResponse(String response) {
+        this.response = response;
+    }
+
+    public int getStatus() {
+        return status;
+    }
+
+    public void setStatus(int status) {
+        this.status = status;
     }
 
 }

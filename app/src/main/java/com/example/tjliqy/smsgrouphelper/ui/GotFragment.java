@@ -1,6 +1,7 @@
 package com.example.tjliqy.smsgrouphelper.ui;
 
 
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -11,13 +12,9 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.example.tjliqy.smsgrouphelper.R;
-import com.example.tjliqy.smsgrouphelper.SMSGroupHelperApp;
+import com.example.tjliqy.smsgrouphelper.bean.AddList;
 import com.example.tjliqy.smsgrouphelper.bean.Address;
 import com.example.tjliqy.smsgrouphelper.sms.SmsHelper;
-import com.example.tjliqy.smsgrouphelper.support.PreferenceHelper;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -32,27 +29,40 @@ public class GotFragment extends Fragment {
 
     private RvGotAdapter adapter;
 
-    private List<Address> list = new ArrayList<>();
-
+    private SmsHelper smsHelper;
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_got, container, false);
         ButterKnife.bind(this, view);
 
-        SmsHelper smsHelper = new SmsHelper(getActivity());
+        smsHelper = new SmsHelper(getActivity());
         adapter = new RvGotAdapter(getActivity());
-        list = PreferenceHelper.getPreAddList();
-        for (Address a: list) {
-            a.setDetail(smsHelper.getSmsDetailByNum(a.getPhone()));
-        }
+        new GotAsync().execute();
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         recyclerView.setAdapter(adapter);
 
-        adapter.add(list);
         adapter.notifyDataSetChanged();
 
         return view;
 
+    }
+
+    class GotAsync extends AsyncTask<Void,Integer,Boolean>{
+
+        @Override
+        protected Boolean doInBackground(Void... voids) {
+            for (Address a : AddList.getInstance().getList()){
+                a.setResponse(smsHelper.getSmsDetailByNum(a.getPhone()));
+            }
+            return true;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean aBoolean) {
+            if (aBoolean){
+                adapter.notifyDataSetChanged();
+            }
+        }
     }
 }

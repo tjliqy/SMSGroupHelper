@@ -8,11 +8,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.example.tjliqy.smsgrouphelper.R;
-import com.example.tjliqy.smsgrouphelper.bean.Address;
-
-import java.util.ArrayList;
-import java.util.List;
-
+import com.example.tjliqy.smsgrouphelper.bean.AddList;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
@@ -23,27 +19,27 @@ public class RvGotAdapter extends RecyclerView.Adapter<RvGotAdapter.RvViewHolder
 
     private Context context;
 
-    private List<Address> beanList = new ArrayList<>();
 
     public RvGotAdapter(Context context) {
         this.context = context;
     }
 
-    public void changeStatus(int position){
-        beanList.get(position).setSend(true);
-        notifyItemChanged(position);
-    }
-
-    public void add(List<Address> beanList){
-        this.beanList.addAll(beanList);
-        notifyDataSetChanged();
-    }
+//    public void changeStatus(int position){
+//        beanList.get(position).setSend(true);
+//        notifyItemChanged(position);
+//    }
+//
+//    public void add(List<Address> beanList){
+//        this.beanList.clear();
+//        this.beanList.addAll(beanList);
+//        notifyDataSetChanged();
+//    }
 
     @Override
     public void onBindViewHolder(RvViewHolder holder, int position) {
-        holder.tvName.setText(position + ". " + beanList.get(position).getRealname());
-        holder.tvNumber.setText(beanList.get(position).getPhone());
-        holder.tvDetail.setText(beanList.get(position).getDetail());
+        holder.tvName.setText(position + ". " + AddList.getInstance().getList().get(position).getRealname());
+        holder.tvNumber.setText(AddList.getInstance().getList().get(position).getPhone());
+        holder.tvDetail.setText(AddList.getInstance().getList().get(position).getDetail());
     }
 
     @Override
@@ -54,7 +50,7 @@ public class RvGotAdapter extends RecyclerView.Adapter<RvGotAdapter.RvViewHolder
 
     @Override
     public int getItemCount() {
-        return beanList.size();
+        return AddList.getInstance().size();
     }
 
     class RvViewHolder extends RecyclerView.ViewHolder{

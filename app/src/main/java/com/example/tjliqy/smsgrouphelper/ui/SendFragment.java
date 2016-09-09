@@ -23,6 +23,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.tjliqy.smsgrouphelper.R;
+import com.example.tjliqy.smsgrouphelper.bean.AddList;
 import com.example.tjliqy.smsgrouphelper.bean.Address;
 import com.example.tjliqy.smsgrouphelper.module.HttpOnNextListener;
 import com.example.tjliqy.smsgrouphelper.module.ProgressSubscriber;
@@ -31,7 +32,6 @@ import com.example.tjliqy.smsgrouphelper.module.api.ApiClient;
 import com.example.tjliqy.smsgrouphelper.sms.SmsHelper;
 import com.example.tjliqy.smsgrouphelper.support.PreferenceHelper;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
@@ -65,7 +65,7 @@ public class SendFragment extends Fragment {
 
     private RvSendAdapter adapter;
 
-    private List<Address> beanList;
+//    private List<Address> beanList;
 
     int num = 0;
 
@@ -82,10 +82,18 @@ public class SendFragment extends Fragment {
 
 
         adapter = new RvSendAdapter(getActivity());
-        beanList = new ArrayList<>();
+//        beanList = new ArrayList<>();
         rlAdd.setLayoutManager(new LinearLayoutManager(getActivity()));
         postEntity = new SubjectPost(new ProgressSubscriber(getAddOnNextListener,getActivity()),this.getString(R.string.token));
         apiClient = ApiClient.getInstance();
+
+        rlAdd.setAdapter(adapter);
+        helper = new SmsHelper(getActivity());
+
+        if (PreferenceHelper.getPreAddList() != null){
+            changeList(PreferenceHelper.getPreAddList());
+            adapter.notifyDataSetChanged();
+        }
 
         btGet.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -93,10 +101,6 @@ public class SendFragment extends Fragment {
                 apiClient.getExMsg(postEntity);
             }
         });
-
-        rlAdd.setAdapter(adapter);
-        helper = new SmsHelper(getActivity());
-
 
 
         btSend.setOnClickListener(new View.OnClickListener() {
@@ -139,15 +143,18 @@ public class SendFragment extends Fragment {
         super.onDestroyView();
     }
 
+    private void changeList(List<Address> list){
+        AddList.getInstance().addAll(list);
+        tvAll.setText("总数: " + AddList.getInstance().size() + "人");
+    }
+
     HttpOnNextListener getAddOnNextListener = new HttpOnNextListener<List<Address>>() {
         @Override
         public void onNext(List<Address> addressList) {
-            beanList.clear();
-            beanList.addAll(addressList);
-            adapter.add(beanList);
-            tvAll.setText("总数："+ beanList.size());
-            endNum = beanList.size();
-            PreferenceHelper.setPrefAddList(beanList);
+            changeList(addressList);
+            endNum = AddList.getInstance().size();
+//            PreferenceHelper.setPrefAddList(beanList);
+            PreferenceHelper.setPrefAddList(AddList.getInstance().getList());
         }
     };
 
@@ -159,8 +166,9 @@ public class SendFragment extends Fragment {
                 case Activity.RESULT_OK:
                     Toast.makeText(getActivity(), num + "发送成功！", Toast.LENGTH_SHORT)
                             .show();
-                    beanList.get(num).setSend(true);
-                    adapter.changeStatus(num);
+                    // TODO: 2016/9/9 设置状态
+//                    beanList.get(num).setSend(true);
+//                    adapter.changeStatus(num);
                     new SendTask().execute();
                     break;
                 default:
@@ -168,7 +176,7 @@ public class SendFragment extends Fragment {
                             .show();
 
                     AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-                    builder.setMessage("在发送给" + beanList.get(num).getRealname() + "时出错，发送中断");
+                    builder.setMessage("在发送给" + AddList.getInstance().getList().get(num).getRealname() + "时出错，发送中断");
                     builder.setPositiveButton("确认", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
@@ -189,14 +197,14 @@ public class SendFragment extends Fragment {
 
         @Override
         protected Boolean doInBackground(Void... voids) {
-            while (num < beanList.size() && num < endNum && beanList.get(num).isSend()) {
+            while (num < AddList.getInstance().getList().size() && num < endNum && AddList.getInstance().getList().get(num).getStatus() == 1) {
                 num++;
             }
-            if (num < beanList.size() && num < endNum) {
-                if (beanList.get(num).getPhone() == null || "".equals(beanList.get(num).getPhone())){
+            if (num < AddList.getInstance().getList().size() && num < endNum) {
+                if (AddList.getInstance().getList().get(num).getPhone() == null || "".equals(AddList.getInstance().getList().get(num).getPhone())){
                     num++;
                 }else {
-                    helper.sendSMS(beanList.get(num).getPhone(), num, beanList.get(num).getDetail());
+                    helper.sendSMS(AddList.getInstance().getList().get(num).getPhone(), num, AddList.getInstance().getList().get(num).getDetail());
                     try {
                         Thread.sleep(5000);
                     } catch (InterruptedException e) {

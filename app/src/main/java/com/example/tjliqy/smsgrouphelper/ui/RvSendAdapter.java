@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.example.tjliqy.smsgrouphelper.R;
+import com.example.tjliqy.smsgrouphelper.bean.AddList;
 import com.example.tjliqy.smsgrouphelper.bean.Address;
 
 import java.util.ArrayList;
@@ -23,27 +24,27 @@ public class RvSendAdapter extends RecyclerView.Adapter<RvSendAdapter.RvViewHold
 
     private Context context;
 
-    private List<Address> beanList = new ArrayList<>();
+//    private List<Address> beanList = new ArrayList<>();
 
     public RvSendAdapter(Context context) {
         this.context = context;
     }
 
-    public void changeStatus(int position){
-        beanList.get(position).setSend(true);
-        notifyItemChanged(position);
-    }
-
-    public void add(List<Address> beanList){
-        this.beanList.addAll(beanList);
-        notifyDataSetChanged();
-    }
+//    public void changeStatus(int position){
+//        beanList.get(position).setSend(true);
+//        notifyItemChanged(position);
+//    }
+//
+//    public void add(List<Address> beanList){
+//        this.beanList.addAll(beanList);
+//        notifyDataSetChanged();
+//    }
 
     @Override
     public void onBindViewHolder(RvViewHolder holder, int position) {
-        holder.tvName.setText(position + ". " + beanList.get(position).getRealname());
-        holder.tvNumber.setText(beanList.get(position).getPhone());
-        if (beanList.get(position).isSend()){
+        holder.tvName.setText(position + ". " + AddList.getInstance().getList().get(position).getRealname());
+        holder.tvNumber.setText(AddList.getInstance().getList().get(position).getPhone());
+        if (AddList.getInstance().getList().get(position).getStatus() == 1){
             holder.tvSend.setText("已发送");
             holder.tvSend.setTextColor(context.getResources().getColor(android.R.color.holo_green_light));
         }
@@ -57,7 +58,7 @@ public class RvSendAdapter extends RecyclerView.Adapter<RvSendAdapter.RvViewHold
 
     @Override
     public int getItemCount() {
-        return beanList.size();
+        return AddList.getInstance().size();
     }
 
     class RvViewHolder extends RecyclerView.ViewHolder{
